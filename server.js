@@ -16,7 +16,6 @@ mongoose.connection.once('open', () => {
     announce('connected to database');
 });
 
-
 app.use('/graphql', graphqlHTTP({
     schema,
     graphiql: isDev()

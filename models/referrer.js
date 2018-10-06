@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const referrerSchema = new Schema({
-    password: String, 
-    phone: String
+    phone: String,
+    password: String
 });
 
 module.exports = mongoose.model('Referrer', referrerSchema);
