@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const { user, password } = require('./dbCredentials');
 const cors = require('cors');
 
+console.log(PORT);
 const app = express();
 
 app.use(cors());
@@ -21,4 +22,4 @@ app.use('/graphql', graphqlHTTP({
     graphiql: isDev()
 }));
 
-app.listen(4000, () => announce(`listening on port ${PORT}`));
+app.listen(PORT, () => announce(`listening on port ${PORT}`));
