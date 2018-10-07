@@ -17,6 +17,12 @@ const ReferrerType = new GraphQLObjectType({
     fields: () => ({
         phone: { type: GraphQLString },
         password: { type: GraphQLString },
+        referrals: { 
+            type: GraphQLList(ReferralType),
+            resolve(parent, args) {
+                return Referral.find({ referrerPhone: parent.phone});
+            }
+        }
     })
 });
 
@@ -43,6 +49,14 @@ const RootQuery = new GraphQLObjectType({
         referrers: {
             type: GraphQLList(ReferrerType),
             resolve: (parent, args) => Referrer.find()
+        },
+        referral: {
+            type: ReferralType,
+            args: {
+                referrerPhone: { type: GraphQLString },
+                referreePhone: { type: GraphQLString }
+            },
+            resolve: (parent, args) => Referral.findOne({ referrerPhone: args.referrerPhone, referreePhone: args.referreePhone})
         },
         referrals: {
             type: GraphQLList(ReferralType),
@@ -101,9 +115,10 @@ const Mutation = new GraphQLObjectType({
                     referreePhone: args.referreePhone
                 });
 
-                if (existing) return null;
+                if (existing || args.referrerPhone === args.referreePhone) return null;
 
-                client.messages
+                try {
+                    client.messages
                     .create({
                         body: args.message,
                         from: '+18164398145',
@@ -111,29 +126,33 @@ const Mutation = new GraphQLObjectType({
                     })
                     .done();
 
-                return new Referral({
-                    referrerPhone: args.referrerPhone,
-                    referreePhone: args.referreePhone,
-                    used: false
-                }).save();
+                    return new Referral({
+                        referrerPhone: args.referrerPhone,
+                        referreePhone: args.referreePhone,
+                        used: false
+                    }).save();
+
+                } catch (err) {
+                    return null;
+                }
+                
             }
         },
         useReferral: {
             type: ReferralType,
             args: {
-                referrerPhone: { type: new GraphQLNonNull(GraphQLString) }
+                referrerPhone: { type: new GraphQLNonNull(GraphQLString) },
+                referreePhone: { type: new GraphQLNonNull(GraphQLString)}
             },
             async resolve(parent, args) {
                 const updated = await Referral
-                    .findOneAndUpdate({ referrerPhone: args.referrerPhone }, { used: true });
+                    .findOneAndUpdate({ referrerPhone: args.referrerPhone, referreePhone: args.referreePhone }, { used: true });
                 return updated;
             }
         }
 
     }
 })
-
-
 
 module.exports = new GraphQLSchema({
     query: RootQuery,
